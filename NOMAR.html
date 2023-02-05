@@ -14,16 +14,9 @@
     body {
         margin: 5px;
     }
-    
-    button {
+    #btn1{
         margin-top: 1em;
         margin-bottom: 1em;
-    }
-
-    @media print {
-        .card {
-            display: none;
-        }
     }
 </style>
 
@@ -31,7 +24,7 @@
     <div class="container">
         <div class="row">
             <div class="col-xs-12 col-md-4 col-lg-3">
-                <div class="card">
+                <div class="card d-print-none">
                     <div class="card-header">
                         <h4 class="noprint">Preparação de Placas Cerâmicas</h4>
                         <p class="text-sm-left">De acordo com a norma: ABNT NBR ISO 10545</p>
@@ -46,14 +39,15 @@
                             <label class="form-label">Espessura[mm]:</label>
                             <input id="z" type="number" placeholder="Expessura(z)" class="form-control">
                             <div class="d-grid col-xs-10 col-md-12 mx-auto">
-                                <button id="btn1" class="btn btn-secondary">OK</button>
+                                <button id="btn1" class="btn btn-secondary">Consultar</button>
+                                <button class="btn btn-secondary d-print-none d-none d-sm-none d-md-block" onclick="window.print()">Imprimir</button>
                             </div>
                         </main>
                     </div>
                 </div>
             </div>
             <div class="col-xs-12 col-md-8 col-lg-9">
-                <h4>Corpos de prova por ensaio:</h4>
+                <h4 class="d-inline">CORPOS DE PROVA POR ENSAIO</h4>
                 <div id="resultado"></div>
             </div>
         </div>
@@ -172,9 +166,12 @@
     }
 
     function adiciona_paragrafo(titulo, texto, parent) {
+        let cabecario = document.createElement("b")
         let paragrafo = document.createElement("p")
+        cabecario.textContent = titulo
         //paragrafo.classList.add("resultado")
-        paragrafo.textContent = "<b>" + titulo + "</b>: " + texto
+        paragrafo.textContent = titulo + ":" + texto
+        parent.appendChild(cabecario)
         parent.appendChild(paragrafo)
     }
 
