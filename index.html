@@ -14,13 +14,15 @@
     body {
         margin: 5px;
     }
-    #btn1{
+
+    #btn1 {
         margin-top: 1em;
         margin-bottom: 1em;
     }
 </style>
 
 <body>
+    <noscript>Habilite Javascript no seu navegador para melhor navegação</noscript>>
     <div class="container">
         <div class="row">
             <div class="col-xs-12 col-md-4 col-lg-3">
@@ -40,14 +42,18 @@
                             <input id="z" type="number" placeholder="Expessura(z)" class="form-control">
                             <div class="d-grid col-xs-10 col-md-12 mx-auto">
                                 <button id="btn1" class="btn btn-secondary">Consultar</button>
-                                <button class="btn btn-secondary d-print-none d-none d-sm-none d-md-block" onclick="window.print()">Imprimir</button>
+                                <button class="btn btn-secondary d-print-none d-none d-sm-none d-md-block"
+                                    onclick="window.print()">Imprimir</button>
                             </div>
                         </main>
                     </div>
                 </div>
             </div>
             <div class="col-xs-12 col-md-8 col-lg-9">
-                <h4 class="d-inline">CORPOS DE PROVA POR ENSAIO</h4>
+                <div class="d-none d-sm-none d-md-block">
+                    <h4>CORPOS DE PROVA POR ENSAIO</h4>
+                    <p></p>
+                </div>
                 <div id="resultado"></div>
             </div>
         </div>
@@ -72,8 +78,7 @@
         "Visual": function (dados) {
             //min 4 placas, ou Area minima de 2m^2
             let cp = Math.ceil(2 / dados.a)
-            if (cp > 4) return (cp.toString() + " placas inteiras")
-            return 4
+            return ((cp > 4) ? cp : 4).toString() + " placas inteiras"
         },
         "Absorção": function (dados) {
             if (dados.a <= 0.0400) return "1 CP por placa; 5 placas; Corte no meio (" + (dados.x / 2).toString() + "cm X " + dados.y.toString() + "cm)"
@@ -110,32 +115,49 @@
             if (dados.x < 7.5) return "5 placas inteiras"
             return "5 placas;1 CP por placa; 7,5cm X " + ((dados.y < 7.5) ? dados.y : 7.5).toString() + "cm"
         },
-        "PEI-Esmaltadas": function (dados) {
-            return "Construindo"
+        "Abrasão profunda": function (dados) {
+            if (dados.x < 20) return "REVISAR: 5 placas inteiras"
+            return "REVISAR: 5 placas;1 CP por placa; 20cm X " + ((dados.y < 20) ? dados.y : 20).toString() + "cm"
         },
-        "PEI-Não_Esmaltada": function (dados) {
-            return "Construindo"
+        "Abrasão superficial": function (dados) {
+            if (x > 100) return "Revisar:5"
+            return "Revisar: 11 placas"
         },
-        "Expansão térmico": function (dados) {
+        "Expansão térmica linear": function (dados) {
+            //2 CP
             return "Construindo"
         },
         "Choque Térmico": function (dados) {
-            return "Construindo"
+            return "5 placas iteiras"
+        },
+        "EPU": function (dados) {
+            return "Revisar:5 CP; 1 CP por placa; Concentrico; Retificar; Mínimo 10cmX3,5cm"
+        },
+        "Gretamento": function (dados) {
+            if (dados.x > 70 && dados.y > 60) return "Revisar:5 placas, cortes em 60cm(autoclave), ensaiar todos os pedaços"
+            return "Revisar:5 placas inteiras"
         },
         "Congelamento": function (dados) {
-            return "Construindo"
+            //min 4 placas, ou Area minima de 2m^2
+            let cp = Math.ceil(0.25 / dados.a)
+            return ((cp > 10) ? cp : 10).toString() + " placas inteiras. Livre de defeitos"
         },
         "Ataque Químico": function (dados) {
-            return "Construindo"
+            if (dados.a < 0.0200) {
+                return "Cobrir area de 200cm^2"
+            }
+            if (dados.x < 15) return "Revisar: 15 placas inteiras"
+            if (dados.x < 22.5) return "Revisar:" + ((dados.y < 15) ? 2 : 4).toString() + " CP por placa. Total de 3 grupos com 5CP. Total de 15 CP"
+            return "REVISAR: 3 placas;5 CP por placa; " + ((dados.x < 7.5) ? dados.x : 7.5).toString() + "cm X " + ((dados.y < 7.5) ? dados.y : 7.5).toString() + "cm" + "Para imerção parcial: 1 CP por placa 5cmX"
         },
         "Manchamento": function (dados) {
-            return "Construindo"
+            return "REVISAR: 5 placas;3 CP por placa; " + ((dados.x < 5) ? dados.x : 5).toString() + "cm X " + ((dados.y < 5) ? dados.y : 5).toString() + "cm"
         },
         "Cádimo e Chumbo": function (dados) {
-            return "Construindo"
+            return "Mínimo de 3 placas"
         },
         "Diferença de Cor": function (dados) {
-            return "Construindo"
+            return "Mínimo de 5 placas"
         }
     }
 
@@ -146,17 +168,17 @@
             z: parseFloat(z.value) || 0,
         }
 
-        dados.a = (dados.x) * (dados.y) * 0.0001
-        if (dados.x < dados.y) {
-            let aux = dados.x
-            dados.x = dados, y
-            dados.y = aux
+        let div_resultado = document.querySelector("#resultado")
+        removeAll(div_resultado);
+
+        if (dados.x == 0 || dados.y == 0 || dados.z == 0) {
+            alert("Dimensões inválidas!")
+            return
         }
 
-        console.log(dados)
-
-        let div_resultado = document.querySelector("#resultado")
-        div_resultado.innerHTML = ""
+        dados.a = (dados.x) * (dados.y) * 0.0001
+        if (dados.x < dados.y)
+            [dados.x, dados.y] = [dados.y, dados.x]
 
         Object.keys(etapas).forEach((nome_etapa, index) => {
             let funcao = etapas[nome_etapa]
@@ -170,59 +192,18 @@
         let paragrafo = document.createElement("p")
         cabecario.textContent = titulo
         //paragrafo.classList.add("resultado")
-        paragrafo.textContent = titulo + ":" + texto
+        paragrafo.textContent = texto
         parent.appendChild(cabecario)
         parent.appendChild(paragrafo)
     }
 
-
-    /*
-    * FORMA ALTERNATIVA
-    */
-
-    /*
-
-    function calc()
-    {
-        let dados = {
-            x: parseFloat(x.value) || 0,
-            y: parseFloat(y.value) || 0,
-            z: parseFloat(z.value) || 0,
+    function removeAll(div) {
+        while (div.firstChild) {
+            while ((div.firstChild).firstChild)
+                removeAll(div.firstChild)
+            div.removeChild(div.lastChild);
         }
-        
-        dados.a = (dados.x) * (dados.y) * 0.0001
-        console.log(dados)
-
-        let div_resultado = document.querySelector("#resultado")
-        div_resultado.innerHTML = ""
-
-        adiciona_paragrafo("Parte 1", calc_parte1(dados), div_resultado)
-        adiciona_paragrafo("Parte 2", calc_parte2(dados), div_resultado)
-        adiciona_paragrafo("Parte 1 Visual", calc_parte1_visual(dados), div_resultado)
-
     }
-
-    function calc_parte1(dados)
-    {
-        //Calcula Area = X*Y se A<= 0,04m^2 escreve="10 placas inteiras"
-        //A<=0,36 escreve "7 placas"
-        //A>0,36 escreve "5 placas"
-        if (dados.a <= 0.04) return "10 placas inteiras"
-        if (dados.a < 0.36) return "7 placas inteiras"
-        return "5 placas inteiras"
-    }
-    function calc_parte1_visual(dados)
-    {
-        //min 4 placas, ou A minima de 2m^2
-        let cp=Math.ceil(2/dados.a)
-        if (cp<4) return("" + "")
-    }
-    function calc_parte2(dados)
-    {
-        if(dados.a<=400) return "CP:5;Placas:5;Total:5. Caso 6.2.2 Corte na metade"
-    }
-
-    */
 
 </script>
 
