@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CP_CALC</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+
+</head>
+<style>
+    body {
+        margin: 5px;
+    }
+    
+    button {
+        margin-top: 1em;
+        margin-bottom: 1em;
+    }
+
+    @media print {
+        .card {
+            display: none;
+        }
+    }
+</style>
+
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-12 col-md-4 col-lg-3">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="noprint">Preparação de Placas Cerâmicas</h4>
+                        <p class="text-sm-left">De acordo com a norma: ABNT NBR ISO 10545</p>
+                    </div>
+                    <div class="card-body">
+                        <b>Placa cerâmica:</b>
+                        <main>
+                            <label class="form-label">Comprimento[cm]:</label>
+                            <input id="x" type="number" placeholder="Comprimento(x)" class="form-control">
+                            <label class="form-label">Largura[cm]:</label>
+                            <input id="y" type="number" placeholder="Largura(y)" class="form-control">
+                            <label class="form-label">Espessura[mm]:</label>
+                            <input id="z" type="number" placeholder="Expessura(z)" class="form-control">
+                            <div class="d-grid col-xs-10 col-md-12 mx-auto">
+                                <button id="btn1" class="btn btn-secondary">OK</button>
+                            </div>
+                        </main>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xs-12 col-md-8 col-lg-9">
+                <h4>Corpos de prova por ensaio:</h4>
+                <div id="resultado"></div>
+            </div>
+        </div>
+</body>
+<script>
+    let btn = document.querySelector("#btn1")
+    let x = document.querySelector("#x")
+    let y = document.querySelector("#y")
+    let z = document.querySelector("#z")
+
+    btn.addEventListener("click", calc)
+
+    let etapas = {
+        "Dimensional": function (dados) {
+            //A<= 0,04m^2 escreve="10 placas inteiras"
+            //0,04m^2< A <=0,36 escreve "7 placas"
+            //A>0,36 escreve "5 placas"
+            if (dados.a <= 0.04) return "10 placas inteiras"
+            if (dados.a < 0.36) return "7 placas inteiras"
+            return "5 placas inteiras"
+        },
+        "Visual": function (dados) {
+            //min 4 placas, ou Area minima de 2m^2
+            let cp = Math.ceil(2 / dados.a)
+            if (cp > 4) return (cp.toString() + " placas inteiras")
+            return 4
+        },
+        "Absorção": function (dados) {
+            if (dados.a <= 0.0400) return "1 CP por placa; 5 placas; Corte no meio (" + (dados.x / 2).toString() + "cm X " + dados.y.toString() + "cm)"
+            if (dados.a <= 0.3600 && dados.x > 20 && dados.y > 20) return "1 CP por placa; 5 placas; Corte em um vértice(s) (20cm X 20cm)"
+            if (dados.a <= 0.3600 && dados.x < 100 && dados.y <= 20) return "1 CP por placa; 5 placas; Corte em um vértice(s) (20cm X " + dados.y.toString() + "cm)"
+            if (dados.a <= 0.3600 && dados.x >= 100 && dados.y <= 20) return "2 CP por placa; 5 placas; Corte em 2 vértice(s) (20cm X " + dados.y.toString() + "cm)"
+            if (dados.a > 0.3600 && dados.x >= 100 && dados.y <= 20) return "2 CP por placa; 3 placas; Corte em 2 vértice(s) (20cm X " + dados.y.toString() + "cm)"
+            if (dados.a > 0.3600 && dados.y > 20 && dados.y < 40) return "4 CP por placa; 3 placas; Corte em 4 vértice(s) (20cm X " + (dados.y / 2).toString() + "cm)"
+            if (dados.a > 0.3600 && dados.y >= 40) return "4 CP por placa; 3 placas; Corte em 4 vértices (20cm X 20cm)"
+        },
+        "Flexão": function (dados) {
+            let proporcao = dados.x / dados.y
+            let y_new = 60 * proporcao
+
+            //Número de corpos de prova
+            let str_ncp = ""
+            if (dados.a > 0.002500 && dados.a <= 0.360000) str_cp = "7 placas;1 CP por placa;"
+            if (dados.a > 0.360000 && dados.z >= 7.5) str_cp = "3 placas;1 CP por placa;"
+            if (dados.a > 0.360000 && dados.z < 7.5) str_cp = "3 placas;3 CP por placa;"
+
+            //Dimensões dos corpos de prova
+            if (dados.z >= 7.5) {
+                if (dados.x <= 60) return str_ncp + "Placas inteiras"
+                if (dados.x > 60) return str_ncp + "Centro coincidente(60cm X" + ((y_new > 25 || proporcao <= 3) ? y_new : dados.y).toString() + "cm )"
+            }
+
+            if (dados.z < 7.5) {
+                if (dados.a >= 0.000324 && dados.a < 0.040000) return str_ncp + "Placas inteiras"
+                if (dados.a > 0.04 && dados.a <= 0.36) return str_ncp + "Centro coincidente 20cm X" + ((dados.y < 20) ? dados.y : 20).toString() + "cm"
+                if (dados.a > 0.36) return str_ncp + "Centro e extremidades 20cm X " + ((dados.y < 20) ? dados.y : 20).toString() + "cm"
+            }
+        },
+        "Impacto": function (dados) {
+            if (dados.x < 7.5) return "5 placas inteiras"
+            return "5 placas;1 CP por placa; 7,5cm X " + ((dados.y < 7.5) ? dados.y : 7.5).toString() + "cm"
+        },
+        "PEI-Esmaltadas": function (dados) {
+            return "Construindo"
+        },
+        "PEI-Não_Esmaltada": function (dados) {
+            return "Construindo"
+        },
+        "Expansão térmico": function (dados) {
+            return "Construindo"
+        },
+        "Choque Térmico": function (dados) {
+            return "Construindo"
+        },
+        "Congelamento": function (dados) {
+            return "Construindo"
+        },
+        "Ataque Químico": function (dados) {
+            return "Construindo"
+        },
+        "Manchamento": function (dados) {
+            return "Construindo"
+        },
+        "Cádimo e Chumbo": function (dados) {
+            return "Construindo"
+        },
+        "Diferença de Cor": function (dados) {
+            return "Construindo"
+        }
+    }
+
+    function calc() {
+        let dados = {
+            x: parseFloat(x.value) || 0,
+            y: parseFloat(y.value) || 0,
+            z: parseFloat(z.value) || 0,
+        }
+
+        dados.a = (dados.x) * (dados.y) * 0.0001
+        if (dados.x < dados.y) {
+            let aux = dados.x
+            dados.x = dados, y
+            dados.y = aux
+        }
+
+        console.log(dados)
+
+        let div_resultado = document.querySelector("#resultado")
+        div_resultado.innerHTML = ""
+
+        Object.keys(etapas).forEach((nome_etapa, index) => {
+            let funcao = etapas[nome_etapa]
+            let resultado = funcao(dados)
+            adiciona_paragrafo(nome_etapa, resultado, div_resultado)
+        })
+    }
+
+    function adiciona_paragrafo(titulo, texto, parent) {
+        let paragrafo = document.createElement("p")
+        //paragrafo.classList.add("resultado")
+        paragrafo.textContent = "<b>" + titulo + "</b>: " + texto
+        parent.appendChild(paragrafo)
+    }
+
+
+    /*
+    * FORMA ALTERNATIVA
+    */
+
+    /*
+
+    function calc()
+    {
+        let dados = {
+            x: parseFloat(x.value) || 0,
+            y: parseFloat(y.value) || 0,
+            z: parseFloat(z.value) || 0,
+        }
+        
+        dados.a = (dados.x) * (dados.y) * 0.0001
+        console.log(dados)
+
+        let div_resultado = document.querySelector("#resultado")
+        div_resultado.innerHTML = ""
+
+        adiciona_paragrafo("Parte 1", calc_parte1(dados), div_resultado)
+        adiciona_paragrafo("Parte 2", calc_parte2(dados), div_resultado)
+        adiciona_paragrafo("Parte 1 Visual", calc_parte1_visual(dados), div_resultado)
+
+    }
+
+    function calc_parte1(dados)
+    {
+        //Calcula Area = X*Y se A<= 0,04m^2 escreve="10 placas inteiras"
+        //A<=0,36 escreve "7 placas"
+        //A>0,36 escreve "5 placas"
+        if (dados.a <= 0.04) return "10 placas inteiras"
+        if (dados.a < 0.36) return "7 placas inteiras"
+        return "5 placas inteiras"
+    }
+    function calc_parte1_visual(dados)
+    {
+        //min 4 placas, ou A minima de 2m^2
+        let cp=Math.ceil(2/dados.a)
+        if (cp<4) return("" + "")
+    }
+    function calc_parte2(dados)
+    {
+        if(dados.a<=400) return "CP:5;Placas:5;Total:5. Caso 6.2.2 Corte na metade"
+    }
+
+    */
+
+</script>
+
+</html>
