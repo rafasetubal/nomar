@@ -14,10 +14,19 @@
     body {
         margin: 5px;
     }
-
     #btn1 {
         margin-top: 1em;
         margin-bottom: 1em;
+    }
+    .p_card {
+        line-height: 1.2em;
+        margin-bottom: 0;
+        margin-top: 0
+
+    }
+    .p_obs{
+        font-size: smaller;
+        font-style: italic
     }
 </style>
 
@@ -25,14 +34,13 @@
     <noscript>Habilite Javascript no seu navegador para melhor navegação</noscript>>
     <div class="container">
         <div class="row">
-            <div class="col-xs-12 col-md-4 col-lg-3">
-                <div class="card d-print-none">
+            <div class="col-xs-12 col-md-4 col-lg-3 d-print-none">
+                <div class="card">
                     <div class="card-header">
-                        <h4 class="noprint">Preparação de Placas Cerâmicas</h4>
+                        <h4 class="d-print-none">Preparação de Placas Cerâmicas</h4>
                         <p class="text-sm-left">De acordo com a norma: ABNT NBR ISO 10545</p>
                     </div>
                     <div class="card-body">
-                        <b>Placa cerâmica:</b>
                         <main>
                             <label class="form-label">Comprimento[cm]:</label>
                             <input id="x" type="number" placeholder="Comprimento(x)" class="form-control">
@@ -52,11 +60,12 @@
             <div class="col-xs-12 col-md-8 col-lg-9">
                 <div class="d-none d-sm-none d-md-block">
                     <h4>CORPOS DE PROVA POR ENSAIO</h4>
-                    <p></p>
+                    <p id="header_print"></p>
                 </div>
-                <div id="resultado"></div>
+                <div id="resultado" class="row row-cols-1 row-cols-lg-3 d-print-3"></div>
             </div>
         </div>
+    </div>
 </body>
 <script>
     let btn = document.querySelector("#btn1")
@@ -65,99 +74,114 @@
     let z = document.querySelector("#z")
 
     btn.addEventListener("click", calc)
+    //padrão de retorno [N° de CP por placa,N° de Placas,L do CP, H do CP, OBS]
 
     let etapas = {
-        "Dimensional": function (dados) {
+        "AXXX - Dimensional": function (dados) {
+            //Padrão de retorno [N° de CP por placa,N° de Placas,L do CP, H do CP, OBS]
             //A<= 0,04m^2 escreve="10 placas inteiras"
             //0,04m^2< A <=0,36 escreve "7 placas"
             //A>0,36 escreve "5 placas"
-            if (dados.a <= 0.04) return "10 placas inteiras"
-            if (dados.a < 0.36) return "7 placas inteiras"
-            return "5 placas inteiras"
+            if (dados.a <= 0.04) return [, 10, , , "Placas inteiras"]//"10 placas inteiras"
+            if (dados.a < 0.36) return [, 7, , , "Placas inteiras"]//"7 placas inteiras"
+            return [, 7, , , "Placas inteiras"]
         },
-        "Visual": function (dados) {
+        "AXXX-Visual": function (dados) {
+            //Padrão de retorno [N° de CP por placa,N° de Placas,L do CP, H do CP, OBS]
             //min 4 placas, ou Area minima de 2m^2
             let cp = Math.ceil(2 / dados.a)
-            return ((cp > 4) ? cp : 4).toString() + " placas inteiras"
+            return [, ((cp > 4) ? cp : 4), , , "Placas inteiras"]
         },
-        "Absorção": function (dados) {
-            if (dados.a <= 0.0400) return "1 CP por placa; 5 placas; Corte no meio (" + (dados.x / 2).toString() + "cm X " + dados.y.toString() + "cm)"
-            if (dados.a <= 0.3600 && dados.x > 20 && dados.y > 20) return "1 CP por placa; 5 placas; Corte em um vértice(s) (20cm X 20cm)"
-            if (dados.a <= 0.3600 && dados.x < 100 && dados.y <= 20) return "1 CP por placa; 5 placas; Corte em um vértice(s) (20cm X " + dados.y.toString() + "cm)"
-            if (dados.a <= 0.3600 && dados.x >= 100 && dados.y <= 20) return "2 CP por placa; 5 placas; Corte em 2 vértice(s) (20cm X " + dados.y.toString() + "cm)"
-            if (dados.a > 0.3600 && dados.x >= 100 && dados.y <= 20) return "2 CP por placa; 3 placas; Corte em 2 vértice(s) (20cm X " + dados.y.toString() + "cm)"
-            if (dados.a > 0.3600 && dados.y > 20 && dados.y < 40) return "4 CP por placa; 3 placas; Corte em 4 vértice(s) (20cm X " + (dados.y / 2).toString() + "cm)"
-            if (dados.a > 0.3600 && dados.y >= 40) return "4 CP por placa; 3 placas; Corte em 4 vértices (20cm X 20cm)"
+        "A119-Absorção": function (dados) {
+            //Padrão de retorno [N° de CP por placa,N° de Placas,L do CP, H do CP, OBS]
+            if (dados.a <= 0.0400) return [1, 5, (dados.x / 2), dados.y, "Corte no meio"]
+            if (dados.a <= 0.3600 && dados.x > 20 && dados.y > 20) return [1, 5, 20, 20, "Corte em um vértice"]
+            if (dados.a <= 0.3600 && dados.x < 100 && dados.y <= 20) return [1, 5, 20, dados.y, "Corte em um vértice"]
+            if (dados.a <= 0.3600 && dados.x >= 100 && dados.y <= 20) return [2, 5, 20, dados.y, "Corte em 2 vértices"]
+            if (dados.a > 0.3600 && dados.x >= 100 && dados.y <= 20) return [2, 3, 20, dados.y, "Corte em 2 vértices"]
+            if (dados.a > 0.3600 && dados.y > 20 && dados.y < 40) return [4, 3, 20, (dados.y / 2), "Corte em 4 vértices"]
+            if (dados.a > 0.3600 && dados.y >= 40) return [4, 3, 20, 20, "Corte em 4 vértices"]
         },
-        "Flexão": function (dados) {
+        "AXXX-Flexão-REVISAR": function (dados) {
+            //Padrão de retorno [N° de CP por placa,N° de Placas,L do CP, H do CP, OBS]
             let proporcao = dados.x / dados.y
             let y_new = 60 * proporcao
 
-            //Número de corpos de prova
-            let str_ncp = ""
-            if (dados.a > 0.002500 && dados.a <= 0.360000) str_cp = "7 placas;1 CP por placa;"
-            if (dados.a > 0.360000 && dados.z >= 7.5) str_cp = "3 placas;1 CP por placa;"
-            if (dados.a > 0.360000 && dados.z < 7.5) str_cp = "3 placas;3 CP por placa;"
+            let n_cp = 0
+            let n_placa = 0
 
+            //Número de corpos de prova
+            if (dados.a > 0.002500 && dados.a <= 0.360000) [n_placa, n_cp] = [7, 1] //str_cp = "7 placas;1 CP por placa;"}
+            if (dados.a > 0.360000 && dados.z >= 7.5) [n_placa, n_cp] = [3, 1] //str_cp = "3 placas;1 CP por placa;"
+            if (dados.a > 0.360000 && dados.z < 7.5) [n_placa, n_cp] = [3, 3] //str_cp = "3 placas;3 CP por placa;"
+            //return[n_cp,n_placa,1,1,"1"]
             //Dimensões dos corpos de prova
             if (dados.z >= 7.5) {
-                if (dados.x <= 60) return str_ncp + "Placas inteiras"
-                if (dados.x > 60) return str_ncp + "Centro coincidente(60cm X" + ((y_new > 25 || proporcao <= 3) ? y_new : dados.y).toString() + "cm )"
+                if (dados.x <= 60) return [n_cp, n_placa, dados.x, dados.y, "Placas inteiras"]
+                if (dados.x > 60) return [n_cp, n_placa, 60, ((y_new > 25 || proporcao <= 3) ? y_new : dados.y), "Centro coincidente"]
             }
 
             if (dados.z < 7.5) {
-                if (dados.a >= 0.000324 && dados.a < 0.040000) return str_ncp + "Placas inteiras"
-                if (dados.a > 0.04 && dados.a <= 0.36) return str_ncp + "Centro coincidente 20cm X" + ((dados.y < 20) ? dados.y : 20).toString() + "cm"
-                if (dados.a > 0.36) return str_ncp + "Centro e extremidades 20cm X " + ((dados.y < 20) ? dados.y : 20).toString() + "cm"
+                if (dados.a >= 0.000324 && dados.a < 0.040000) return [n_cp, n_placa, dados.x, dados.y, "Placas inteiras"]
+                if (dados.a > 0.04 && dados.a <= 0.36) return [n_cp, n_placa, 20, ((dados.y < 20) ? dados.y : 20), "Centro coincidente"]
+                if (dados.a > 0.36) return [n_cp, n_placa, 20, ((dados.y < 20) ? dados.y : 20), "Centro e extremidades"]
             }
+            return (0, 0, 0, 0, "ERRO")
         },
-        "Impacto": function (dados) {
-            if (dados.x < 7.5) return "5 placas inteiras"
-            return "5 placas;1 CP por placa; 7,5cm X " + ((dados.y < 7.5) ? dados.y : 7.5).toString() + "cm"
+        "AXXX-Impacto": function (dados) {
+            //Padrão de retorno [N° de CP por placa,N° de Placas,L do CP, H do CP, OBS]
+            if (dados.x < 7.5) return [, 5, , , "Placas inteiras"]
+            return [1, 5, 7.5, ((dados.y < 7.5) ? dados.y : 7.5), ""]
         },
-        "Abrasão profunda": function (dados) {
-            if (dados.x < 20) return "REVISAR: 5 placas inteiras"
-            return "REVISAR: 5 placas;1 CP por placa; 20cm X " + ((dados.y < 20) ? dados.y : 20).toString() + "cm"
+        "AXXX-Abrasão profunda": function (dados) {
+            if (dados.x < 20) return [, 5, , , "REVISAR;Placas inteiras"]
+            return [1, 5, 20, ((dados.y < 20) ? dados.y : 20), "REVISAR"]
         },
-        "Abrasão superficial": function (dados) {
-            if (x > 100) return "Revisar:5"
-            return "Revisar: 11 placas"
+        "AXXX-Abrasão superficial": function (dados) {
+            if (x > 100) return [, 5, , , "REVISAR;Placas inteiras"]
+            return [, 11, , , "REVISAR;Placas inteiras"]
         },
-        "Expansão térmica linear": function (dados) {
+        "AXXX-Expansão térmica linear": function (dados) {
             //2 CP
-            return "Construindo"
+            return [1, 2, 2.5, 0.6, "*Retificar: 2,5cm X 0,6cm X 0,6cm"]
         },
-        "Choque Térmico": function (dados) {
-            return "5 placas iteiras"
+        "AXXX-Choque Térmico": function (dados) {
+            return [, 5, , , "REVISAR;Placas inteiras"]
         },
-        "EPU": function (dados) {
-            return "Revisar:5 CP; 1 CP por placa; Concentrico; Retificar; Mínimo 10cmX3,5cm"
+        "A125-EPU": function (dados) {
+            return [1, 5, 10, 3.5, "REVISAR; Concentrico; Corte: 11cm X 4,5cm; Retifica: 10cmX3,5cm"]
         },
-        "Gretamento": function (dados) {
-            if (dados.x > 70 && dados.y > 60) return "Revisar:5 placas, cortes em 60cm(autoclave), ensaiar todos os pedaços"
-            return "Revisar:5 placas inteiras"
+        "A125-EPU": function (dados) {
+            return [1, 5, 10, 3.5, "REVISAR; Concentrico; Corte: 11cm X 4,5cm; Retifica: 10cmX3,5cm"]
         },
-        "Congelamento": function (dados) {
+        "A128-Gretamento": function (dados) {
+            if (dados.x > 70 && dados.y > 60) return [1, 5, 60, ((dados.y < 70) ? dados.y : 60), "REVISAR; Restrição da autoclave e mufla: 60cm,Ensaiar todos os pedaços"]
+            return [, 5, , , "REVISAR;Placas inteiras"]
+        },
+        "AXXX-Congelamento": function (dados) {
             //min 4 placas, ou Area minima de 2m^2
             let cp = Math.ceil(0.25 / dados.a)
-            return ((cp > 10) ? cp : 10).toString() + " placas inteiras. Livre de defeitos"
-        },
-        "Ataque Químico": function (dados) {
+            return [1, ((cp > 10) ? cp : 10), dados.x, dados.y, "REVISAR:Placas inteiras, livre de defeitos"]
+        },/*
+        "A135-Ataque Químico": function (dados) {
             if (dados.a < 0.0200) {
                 return "Cobrir area de 200cm^2"
             }
             if (dados.x < 15) return "Revisar: 15 placas inteiras"
             if (dados.x < 22.5) return "Revisar:" + ((dados.y < 15) ? 2 : 4).toString() + " CP por placa. Total de 3 grupos com 5CP. Total de 15 CP"
             return "REVISAR: 3 placas;5 CP por placa; " + ((dados.x < 7.5) ? dados.x : 7.5).toString() + "cm X " + ((dados.y < 7.5) ? dados.y : 7.5).toString() + "cm" + "Para imerção parcial: 1 CP por placa 5cmX"
-        },
-        "Manchamento": function (dados) {
-            return "REVISAR: 5 placas;3 CP por placa; " + ((dados.x < 5) ? dados.x : 5).toString() + "cm X " + ((dados.y < 5) ? dados.y : 5).toString() + "cm"
+        },*/
+        "A129-Manchamento": function (dados) {
+            return [3, 5, ((dados.x < 5) ? dados.x : 5), ((dados.y < 5) ? dados.y : 5), ""]
         },
         "Cádimo e Chumbo": function (dados) {
-            return "Mínimo de 3 placas"
+            return [, 3, , , "REVISAR;Placas inteiras"]
         },
         "Diferença de Cor": function (dados) {
-            return "Mínimo de 5 placas"
+            return [, 5, , , "REVISAR;Placas inteiras"]
+        },
+        "TESTE": function (dados) {
+            return [, 5, , , "Placas inteiras"]
         }
     }
 
@@ -168,6 +192,9 @@
             z: parseFloat(z.value) || 0,
         }
 
+        let header_print = document.querySelector("#header_print")
+        header_print.textContent = ""
+
         let div_resultado = document.querySelector("#resultado")
         removeAll(div_resultado);
 
@@ -177,24 +204,70 @@
         }
 
         dados.a = (dados.x) * (dados.y) * 0.0001
-        if (dados.x < dados.y)
-            [dados.x, dados.y] = [dados.y, dados.x]
+        if (dados.x < dados.y) [dados.x, dados.y] = [dados.y, dados.x]
+
+        header_print.textContent = "PLACA CERÂMICA: " + dados.x.toString() + "cm X " + dados.y.toString() + "cm X " + dados.z.toString() + "mm"
 
         Object.keys(etapas).forEach((nome_etapa, index) => {
             let funcao = etapas[nome_etapa]
             let resultado = funcao(dados)
-            adiciona_paragrafo(nome_etapa, resultado, div_resultado)
+            adiciona_card(nome_etapa, resultado, div_resultado)
         })
     }
 
-    function adiciona_paragrafo(titulo, texto, parent) {
+    function adiciona_card(titulo, resultado, parent) {
+
+        let col = document.createElement("div")
+        col.classList.add("col")
+        let card = document.createElement("div")
+        card.classList.add("card")
+        let card_header = document.createElement("div")
+        card_header.classList.add("card-header")
+        let card_body = document.createElement("div")
+        card_body.classList.add("card-body")
+
+        //padrão de retorno [N° de CP por placa,N° de Placas,L do CP, H do CP, OBS]
         let cabecario = document.createElement("b")
-        let paragrafo = document.createElement("p")
         cabecario.textContent = titulo
-        //paragrafo.classList.add("resultado")
-        paragrafo.textContent = texto
-        parent.appendChild(cabecario)
-        parent.appendChild(paragrafo)
+        card_header.appendChild(cabecario)
+
+        if (resultado[0]) {
+            let n_cp = document.createElement("p")
+            n_cp.classList.add("p_card")
+            n_cp.textContent = "CP por placa: " + resultado[0].toString()
+            card_body.appendChild(n_cp)
+        }
+        if (resultado[1]) {
+            let n_placa = document.createElement("p")
+            n_placa.classList.add("p_card")
+            n_placa.textContent = "Total de placas: " + resultado[1].toString()
+            card_body.appendChild(n_placa)
+        }
+        if (resultado[0] && resultado[1]) {
+            let nt_cp = document.createElement("p")
+            nt_cp.classList.add("p_card")
+            nt_cp.textContent = "Total de CP: " + (resultado[0] * resultado[1]).toString()
+            card_body.appendChild(nt_cp)
+        }
+        if (resultado[2] && resultado[3]) {
+            let size_cp = document.createElement("p")
+            size_cp.classList.add("p_card")
+            size_cp.textContent = "Dimensões: " + resultado[2].toString() + "cm X " + resultado[3].toString() + "cm"
+            card_body.appendChild(size_cp)
+
+        }
+        if(resultado[4]){
+            let obs = document.createElement("p")
+            obs.classList.add("p_obs")
+            obs.textContent = "*"+resultado[4]
+            card_body.appendChild(obs)
+        }
+        
+        card.appendChild(card_header)
+        card.appendChild(card_body)
+
+        col.appendChild(card)
+        parent.appendChild(col)
     }
 
     function removeAll(div) {
