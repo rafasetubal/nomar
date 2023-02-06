@@ -28,7 +28,9 @@
 
     .p_obs {
         font-size: smaller;
-        font-style: italic
+        font-style: italic;
+        margin-bottom: 0;
+        margin-top: 0
     }
     
     @media print {
@@ -36,17 +38,23 @@
             width: 0%;
             display: none;
         }
-
         #resultado {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             grid-auto-rows: minmax(100px, auto);
         }
+        .p_card{
+            font-size: small;
+        }
+        .p_obs{
+            font-size: smaller;
+        }
+
     }
 </style>
 
 <body>
-    <noscript>Habilite Javascript no seu navegador para melhor navegação</noscript>>
+    <noscript>Habilite Javascript no seu navegador para melhor navegação</noscript>
     <div class="container">
         <div class="row">
             <div id="colum_menu" class="col-xs-12 col-md-4 col-lg-3">
@@ -57,11 +65,11 @@
                     </div>
                     <div class="card-body">
                         <label class="form-label">Comprimento[cm]:</label>
-                        <input id="x" type="number" placeholder="Comprimento(x)" class="form-control">
+                        <input id="x" type="number" placeholder="x[cm]" class="form-control">
                         <label class="form-label">Largura[cm]:</label>
-                        <input id="y" type="number" placeholder="Largura(y)" class="form-control">
+                        <input id="y" type="number" placeholder="y[cm]" class="form-control">
                         <label class="form-label">Espessura[mm]:</label>
-                        <input id="z" type="number" placeholder="Expessura(z)" class="form-control">
+                        <input id="z" type="number" placeholder="z[mm]" class="form-control">
                         <div class="d-grid col-xs-10 col-md-12 mx-auto">
                             <button id="btn1" class="btn btn-secondary">Consultar</button>
                             <button class="btn btn-secondary d-print-none d-none d-sm-none d-md-block"
@@ -75,7 +83,7 @@
                     <h4>CORPOS DE PROVA POR ENSAIO</h4>
                     <p id="header_label"></p>
                 </div>
-                <div id="resultado" class="row row-cols-lg-3 row-cols-sm-2 row-cols-xs-1 g-0"></div>
+                <div id="resultado" class="row row-cols-lg-3 row-cols-sm-2 row-cols-xs-1 g-0 p-0 m-0"></div>
             </div>
         </div>
 </body>
@@ -96,7 +104,7 @@
             //A>0,36 escreve "5 placas"
             if (dados.a <= 0.04) return [, 10, , , "Placas inteiras"]//"10 placas inteiras"
             if (dados.a < 0.36) return [, 7, , , "Placas inteiras"]//"7 placas inteiras"
-            return [, 7, , , "Placas inteiras"]
+            return [,5, , , "Placas inteiras"]
         },
         "AXXX-Visual": function (dados) {
             //Padrão de retorno [N° de CP por placa,N° de Placas,L do CP, H do CP, OBS]
@@ -153,7 +161,7 @@
             if (x > 100) return [, 5, , , "REVISAR;Placas inteiras"]
             return [, 11, , , "REVISAR;Placas inteiras"]
         },
-        "AXXX-Expansão térmica linear": function (dados) {
+        "AXXX-Expansão term. linear": function (dados) {
             //2 CP
             return [1, 2, 2.5, 0.6, "*Retificar: 2,5cm X 0,6cm X 0,6cm"]
         },
@@ -186,10 +194,10 @@
         "A129-Manchamento": function (dados) {
             return [3, 5, ((dados.x < 5) ? dados.x : 5), ((dados.y < 5) ? dados.y : 5), ""]
         },
-        "Cádimo e Chumbo": function (dados) {
+        "AXXX-Cádimo e Chumbo": function (dados) {
             return [, 3, , , "REVISAR;Placas inteiras"]
         },
-        "Diferença de Cor": function (dados) {
+        "AXX-Diferença de Cor": function (dados) {
             return [, 5, , , "REVISAR;Placas inteiras"]
         }
     }
@@ -228,6 +236,10 @@
 
         let card = document.createElement("div")
         card.classList.add("card")
+        card.classList.add("p-0")
+        card.classList.add("m-0")
+
+
         let card_header = document.createElement("div")
         card_header.classList.add("card-header")
         let card_body = document.createElement("div")
