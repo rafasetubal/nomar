@@ -14,19 +14,34 @@
     body {
         margin: 5px;
     }
+
     #btn1 {
         margin-top: 1em;
         margin-bottom: 1em;
     }
+
     .p_card {
         line-height: 1.2em;
         margin-bottom: 0;
         margin-top: 0
-
     }
-    .p_obs{
+
+    .p_obs {
         font-size: smaller;
         font-style: italic
+    }
+    
+    @media print {
+        #colum_menu {
+            width: 0%;
+            display: none;
+        }
+
+        #resultado {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-auto-rows: minmax(100px, auto);
+        }
     }
 </style>
 
@@ -34,38 +49,35 @@
     <noscript>Habilite Javascript no seu navegador para melhor navegação</noscript>>
     <div class="container">
         <div class="row">
-            <div class="col-xs-12 col-md-4 col-lg-3 d-print-none">
+            <div id="colum_menu" class="col-xs-12 col-md-4 col-lg-3">
                 <div class="card">
                     <div class="card-header">
-                        <h4 class="d-print-none">Preparação de Placas Cerâmicas</h4>
+                        <h4>Preparação de Placas Cerâmicas</h4>
                         <p class="text-sm-left">De acordo com a norma: ABNT NBR ISO 10545</p>
                     </div>
                     <div class="card-body">
-                        <main>
-                            <label class="form-label">Comprimento[cm]:</label>
-                            <input id="x" type="number" placeholder="Comprimento(x)" class="form-control">
-                            <label class="form-label">Largura[cm]:</label>
-                            <input id="y" type="number" placeholder="Largura(y)" class="form-control">
-                            <label class="form-label">Espessura[mm]:</label>
-                            <input id="z" type="number" placeholder="Expessura(z)" class="form-control">
-                            <div class="d-grid col-xs-10 col-md-12 mx-auto">
-                                <button id="btn1" class="btn btn-secondary">Consultar</button>
-                                <button class="btn btn-secondary d-print-none d-none d-sm-none d-md-block"
-                                    onclick="window.print()">Imprimir</button>
-                            </div>
-                        </main>
+                        <label class="form-label">Comprimento[cm]:</label>
+                        <input id="x" type="number" placeholder="Comprimento(x)" class="form-control">
+                        <label class="form-label">Largura[cm]:</label>
+                        <input id="y" type="number" placeholder="Largura(y)" class="form-control">
+                        <label class="form-label">Espessura[mm]:</label>
+                        <input id="z" type="number" placeholder="Expessura(z)" class="form-control">
+                        <div class="d-grid col-xs-10 col-md-12 mx-auto">
+                            <button id="btn1" class="btn btn-secondary">Consultar</button>
+                            <button class="btn btn-secondary d-print-none d-none d-sm-none d-md-block"
+                                onclick="window.print()">Imprimir</button>
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="col-xs-12 col-md-8 col-lg-9">
-                <div class="d-none d-sm-none d-md-block">
+                <div id="header_print" class="d-none d-sm-block d-print-block">
                     <h4>CORPOS DE PROVA POR ENSAIO</h4>
-                    <p id="header_print"></p>
+                    <p id="header_label"></p>
                 </div>
-                <div id="resultado" class="row row-cols-1 row-cols-lg-3 d-print-3"></div>
+                <div id="resultado" class="row row-cols-lg-3 row-cols-sm-2 row-cols-xs-1 g-0"></div>
             </div>
         </div>
-    </div>
 </body>
 <script>
     let btn = document.querySelector("#btn1")
@@ -162,15 +174,15 @@
             //min 4 placas, ou Area minima de 2m^2
             let cp = Math.ceil(0.25 / dados.a)
             return [1, ((cp > 10) ? cp : 10), dados.x, dados.y, "REVISAR:Placas inteiras, livre de defeitos"]
-        },/*
+        },
         "A135-Ataque Químico": function (dados) {
             if (dados.a < 0.0200) {
-                return "Cobrir area de 200cm^2"
+                return [, , , , "REVISAR!Cobrir area de 200cm^2"]
             }
-            if (dados.x < 15) return "Revisar: 15 placas inteiras"
+            if (dados.x < 15) return [, 15, , , "Revisar: 15 placas inteiras"]
             if (dados.x < 22.5) return "Revisar:" + ((dados.y < 15) ? 2 : 4).toString() + " CP por placa. Total de 3 grupos com 5CP. Total de 15 CP"
-            return "REVISAR: 3 placas;5 CP por placa; " + ((dados.x < 7.5) ? dados.x : 7.5).toString() + "cm X " + ((dados.y < 7.5) ? dados.y : 7.5).toString() + "cm" + "Para imerção parcial: 1 CP por placa 5cmX"
-        },*/
+            return [5, 3, ((dados.x < 7.5) ? dados.x : 7.5), ((dados.y < 7.5) ? dados.y : 7.5), "REVISAR:Para imerção parcial: 1 CP por placa 5cmX"]
+        },
         "A129-Manchamento": function (dados) {
             return [3, 5, ((dados.x < 5) ? dados.x : 5), ((dados.y < 5) ? dados.y : 5), ""]
         },
@@ -179,9 +191,6 @@
         },
         "Diferença de Cor": function (dados) {
             return [, 5, , , "REVISAR;Placas inteiras"]
-        },
-        "TESTE": function (dados) {
-            return [, 5, , , "Placas inteiras"]
         }
     }
 
@@ -192,8 +201,8 @@
             z: parseFloat(z.value) || 0,
         }
 
-        let header_print = document.querySelector("#header_print")
-        header_print.textContent = ""
+        let header_label = document.querySelector("#header_label")
+        header_label.textContent = ""
 
         let div_resultado = document.querySelector("#resultado")
         removeAll(div_resultado);
@@ -206,7 +215,7 @@
         dados.a = (dados.x) * (dados.y) * 0.0001
         if (dados.x < dados.y) [dados.x, dados.y] = [dados.y, dados.x]
 
-        header_print.textContent = "PLACA CERÂMICA: " + dados.x.toString() + "cm X " + dados.y.toString() + "cm X " + dados.z.toString() + "mm"
+        header_label.textContent = "PLACA CERÂMICA: " + dados.x.toString() + "cm X " + dados.y.toString() + "cm X " + dados.z.toString() + "mm"
 
         Object.keys(etapas).forEach((nome_etapa, index) => {
             let funcao = etapas[nome_etapa]
@@ -217,8 +226,6 @@
 
     function adiciona_card(titulo, resultado, parent) {
 
-        let col = document.createElement("div")
-        col.classList.add("col")
         let card = document.createElement("div")
         card.classList.add("card")
         let card_header = document.createElement("div")
@@ -256,18 +263,17 @@
             card_body.appendChild(size_cp)
 
         }
-        if(resultado[4]){
+        if (resultado[4]) {
             let obs = document.createElement("p")
             obs.classList.add("p_obs")
-            obs.textContent = "*"+resultado[4]
+            obs.textContent = "*" + resultado[4]
             card_body.appendChild(obs)
         }
-        
+
         card.appendChild(card_header)
         card.appendChild(card_body)
 
-        col.appendChild(card)
-        parent.appendChild(col)
+        parent.appendChild(card)
     }
 
     function removeAll(div) {
