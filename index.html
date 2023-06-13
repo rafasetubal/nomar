@@ -122,7 +122,7 @@
             if (dados.a > 0.3600 && dados.y > 20 && dados.y < 40) return [4, 3, 20, (dados.y / 2), "Corte em 4 vértices"]
             if (dados.a > 0.3600 && dados.y >= 40) return [4, 3, 20, 20, "Corte em 4 vértices"]
         },
-        "AXXX-Flexão-REVISAR": function (dados) {
+        "A122-Flexão-REVISAR": function (dados) {
             //Padrão de retorno [N° de CP por placa,N° de Placas,L do CP, H do CP, OBS]
             let proporcao = dados.x / dados.y
             let y_new = 60 * proporcao
